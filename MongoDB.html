@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB</title>
+    <link rel="stylesheet" href="css/miestilo.css">
+</head>
+<body>
+    <header>
+        <h1>MongoDB</h1>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="vscode.html"> Aplicaciones Web </a></li>
+            <li>Front-end 
+                <ul>
+                    <li>  <a href="html.html">html 5</a></li>
+                    <li>  <a href="CSS.html">CSS 3</a></li>
+                    <li> <a href="JavaScript.html"> JavaScript</a></li>
+                </ul>
+            </li>
+    
+            <li>Black-end 
+                    <ul>
+                        <li> <a href="NodeJS.html"> Node JS</a></li>
+                        <li><a href="MySQL.html"> MySQL</a></li>
+                        <li><a href="MongoDB.html"> MongoDB</a></li>
+                        <li> <a href="Angular.html">Angular</a></li>
+                    </ul>
+            
+        </ul>
+    </nav>
+    
+    <section>
+        <article>
+            <img src="img/mongoDB.png" alt="texto alterno" width="230" height="220">
+            <h2> MongoDB:</h2>
+            <ul>
+                <li> <a href="#concepto">¿Qué es? - Concepto</a> </li>
+                <li> <a href="#proceso">Proceso de instalación</a>  </li>
+                <li> <a href="#caracteristicas">Caracteristicas</a></li>
+                <li> <a href="funcion">¿Cómo funciona MongoDB?</a></li>
+                <li> <a href="#links">Extensiones - PlugIns </a></li>
+            </ul>
+        </article>
+
+        <article>
+            <h2 id="concepto">¿Qué es MongoDB? - Concepto</h2>
+            <p>MongoDB es un sistema de base de datos NoSQL, orientado a documentos y de código abierto.En lugar de guardar los datos en tablas, tal y como se hace en las bases de datos relacionales, MongoDB guarda estructuras de datos BSON (una especificación similar a JSON) con un esquema dinámico, haciendo que la integración de los datos en ciertas aplicaciones sea más fácil y rápida.
+               MongoDB es una base de datos adecuada para su uso en producción y con múltiples funcionalidades. 
+               Esta base de datos se utiliza mucho en la industria,contando con implantaciones en empresas como MTV Network, Craiglist,Foursquare.</p>
+            <p>Esto quiere decir que en lugar de guardar los datos en registros, guarda los datos en documentos. Estos documentos son almacenados en BSON, que es una representación binaria de JSON.</p>
+            <p>Lleve sus ideas al mercado más rápidamente con una plataforma de datos para aplicaciones basada en la base de datos moderna líder. Admita casos de uso transaccionales, de búsqueda, analíticos y móviles mientras utiliza una interfaz de consulta común y el modelo de datos que encanta a los desarrolladores.</p>
+            
+            <a href="https://www.mongodb.com/es" target="_blank">Sitio oficial de MongoDB</a> <br>
+             <br>
+        </article>
+
+        <article>
+            <h2 id="caracteristicas">Caracteristicas</h2>
+            <p>1. Gran sintaxis de consultas:
+                Una de las características de MongoDB más particulares es que podemos realizar todo tipo de consultas, gracias a su potente sintaxis.
+                Esto quiere decir que todas las preguntas, desde las dudas más simples hasta las más complejas, pueden ser resueltas por los usuarios de esta base de datos NoSQL. De esta manera, podrás obtener todo tipo de información pertinente sobre un tema en particular.</p>
+            
+            <p>2. Indexación:
+                Una de las características de MongoDB más particulares, ya que veremos las similitudes entre este proyecto y las bases de datos relacionales.
+                Por medio de esta herramienta no sólo podemos crear índices, sino también administrarlos y rehacerlos. De igual forma, estos índices tendrán un gran impacto en lo que será el rendimiento de las consultas, mientras la base de datos incremente su tamaño.
+                
+                
+            <p>3. Cuenta con soporte para SQL:
+                Aunque al comienzo del post establecimos la separación entre SQL y NoSQL debes saber que, entre las características de MongoDB, está el soporte de este tipo de lenguaje.
+                Tanto si tienes experiencia con SQL como si no, relájate. MongoDB brinda soporte para que los usuarios puedan seguir utilizando el lenguaje de consulta estructurada. </p>
+            
+            <p>Una de las diferencias más importantes con respecto a las bases de datos relacionales, es que no es necesario seguir un esquema. Los documentos de una misma colección - concepto similar a una tabla de una base de datos relacional, pueden tener esquemas diferentes.</p>
+            <br>
+            
+            <a href="https://www.crehana.com/blog/desarrollo-web/caracteristicas-mongodb/" target="_blank">Ver más</a>
+
+        </article>
+        <article>
+            <h2 id="funcion">¿Cómo funciona MongoDB?</h2>
+            <p>MongoDB está escrito en C++, aunque las consultas se hacen pasando objetos JSON como parámetro. Es algo bastante lógico, dado que los propios documentos se almacenan en BSON. Por ejemplo:</p>
+            <i>db.Clientes.find({Nombre:"Pedro"});</i>
+            <p>La consulta anterior buscará todos los clientes cuyo nombre sea Pedro.
+
+                MongoDB viene de serie con una consola desde la que podemos ejecutar los distintos comandos. Esta consola está construida sobre JavaScript, por lo que las consultas se realizan utilizando 
+                ese lenguaje. Además de las funciones de MongoDB, podemos utilizar muchas de las funciones propias de JavaSciprt. En la consola también podemos definir variables, funciones o utilizar bucles.</p>
+        </article>
+
+            <article>
+                <h2 id="proceso">Proceso de instalación</h2>
+    
+                    <p>Paso 1:Obtener el instalador para Windows del centro de descargas.</p>
+                    <p>Paso 2: Iniciar el instalador como administrador.</p>
+                    <p>Paso 3: Crear las carpeta de almacenamiento y configuracion de MongoDB. </p>
+                    <a href="https://nodejs.org/es/download/" target="_blank">Ver más</a>
+                    <br>
+                    
+                    <a href="https://www.youtube.com/watch?v=ipmhBYqIP44" target="_blank">Video sobre el proceso de instalación</a>
+            
+            </article>
+            <article>
+                <a href="https://www.genbeta.com/desarrollo/mongodb-que-es-como-funciona-y-cuando-podemos-usarlo-o-no">información importante sobre MongoDB</a>
+
+            </article>
+    </section>
+    <aside>   
+        <h1 id="links"> Otras páginas acerca de MongoDB</h1>
+        <p>Páginas de consulta sobre MongoDB</p>
+        <a href="https://gist.github.com/AlejoJamC/b8635af765ac7495c4931403b97a0d78" target="_blank">MongoDB</a>
+       <br>
+       <a href="https://www.youtube.com/watch?v=Apbk83XL8L8" target="_blank">Manual de cómo usar MongoDB </a>
+        <br>
+        <a href="https://www.youtube.com/watch?v=cT1HAaPqI-c" target="_blank">Aprende MongoDB</a>
+    </aside>
+
+    
+    <footer>
+        <hr>Nombre del programador de la página</hr>
+        <p>Mariana Canchola Ramírez</p>
+    </footer>
+
+</body>
+</html>

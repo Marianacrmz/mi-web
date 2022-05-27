@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NodeJS</title>
+    <link rel="stylesheet" href="css/miestilo.css">
+</head>
+<body>
+    <header>
+        <h1>NodeJS</h1>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="vscode.html"> Aplicaciones Web </a></li>
+            <li>Front-end 
+                <ul>
+                    <li>  <a href="html.html">html 5</a></li>
+                    <li>  <a href="CSS.html">CSS 3</a></li>
+                    <li> <a href="JavaScript.html"> JavaScript</a></li>
+                </ul>
+            </li>
+    
+            <li>Black-end 
+                    <ul>
+                        <li> <a href="NodeJS.html"> Node JS</a></li>
+                        <li><a href="MySQL.html"> MySQL</a></li>
+                        <li><a href="MongoDB.html"> MongoDB</a></li>
+                        <li> <a href="Angular.html">Angular</a></li>
+                    </ul>
+            
+        </ul>
+    </nav>
+    
+    <section>
+        <article>
+            <img src="img/nodelogo.png" alt="text alterno" width="250" height="150">
+            <h2> Temas Node JS:</h2>
+            <ul>
+                <li> <a href="#concepto">¿Qué es? - Concepto</a> </li>
+                <li> <a href="#funcion">¿Cómo funciona node.js?</a></li>
+                <li> <a href="#caracteristicas">Caracteristicas</a></li>
+                <li> <a href="#proceso">Proceso de instalación</a></li>
+                <li> <a href="#funcionalidad">¿Para qué sirve Node.js?</a></li>
+                <li> <a href="#liga">Página oficial de descarga de NodeJS </a></li>
+ 
+
+            </ul>
+        </article>
+
+        <article>
+            <h2 id="concepto">¿Qué es Node JS? - Concepto</h2>
+            <p>Node.js®, Node.js, es un entorno en tiempo de ejecución multiplataforma para la capa del servidor (en el lado del servidor) basado en JavaScript.
+                Node.js es un entorno controlado por eventos diseñado para crear aplicaciones escalables, permitiéndote establecer y gestionar múltiples conexiones al mismo tiempo. 
+                Gracias a esta característica, no tienes que preocuparte con el bloqueo de procesos, pues no hay bloqueos. </p>
+
+             <a href="https://nodejs.org/es/"
+              target="_blank"> Ver más</a> <br>
+
+        </article>
+
+        <article>
+            <h2 id="funcion">¿Cómo funciona Node.js?</h2>
+            <p>El diseño de Node.js está inspirado en sistemas como el Event Machine de Ruby o el Twisted de Python. Sin embargo, Node.js presenta un bucle de eventos como una construcción en tiempo de ejecución en lugar de una biblioteca. Este bucle de eventos es invisible para el usuario.
+
+                Otra característica especial de Node.js es que está diseñado para simplificar la comunicación. No tiene subprocesos, pero te permite aprovechar múltiples núcleos en su entorno y compartir sockets entre procesos.</p>
+        </article>
+
+        <article>
+            <h1 id="caracteristicas">Caracteristicas</h1>
+            <li>Velocidad. Node.js está construido sobre el motor de JavaScript V8 de Google Chrome, por eso su biblioteca es muy rápida en la ejecución de código.</li>
+            
+            <li>Sin búfer: Las aplicaciones de Node.js generan los datos en trozos (chunks), nunca los almacenan en búfer. </li>
+            <li> Asíncrono y controlado por eventos: Como hemos dicho anteriormente, las APIs de la biblioteca de Node.js son asíncronas, sin bloqueo. Un servidor basado en Node.js no espera que una API devuelva datos. El servidor pasa a la siguiente API después de llamarla, 
+                y un mecanismo de notificación de eventos ayuda al servidor a obtener una respuesta de la llamada a la API anterior.</li>
+            <li>Un subproceso escalable: Node.js utiliza un modelo de un solo subproceso con bucle de eventos. Gracias al mecanismo de eventos, el servidor responde sin bloqueos, como hemos dicho. 
+                Esto hace que el servidor sea altamente escalable comparando con los servidores tradicionales como el Servidor HTTP de Apache.</li>
+            <br>
+            
+            <a href="https://www.itdo.com/blog/que-es-node-js-y-para-que-sirve/" target="_blank">Ver más</a>
+
+        </article>
+
+        <article>
+            <h1 id="fucionalidad">¿Para qué sirve Node.js?</h1>
+            <p>Puedes utilizar Node.js para diferentes tipos de aplicaciones. Los siguientes son algunos de los ejemplos:</p>
+            <li>Aplicaciones de transmisión de datos (streaming)</li>
+            <li>Aplicaciones intensivas de datos en tiempo real</li>
+            <li>Aplicaciones vinculadas a E/S</li>
+            <li>Aplicaciones basadas en JSON:API</li>
+            <li>Aplicaciones de página única</li>
+        </article>
+
+        
+        <article>
+           <img  src="img/Nodeinstalacion.jpg" alt="text alterno" width="450" height="250" style="border-radius: 5%; border: 5px solid #ddd">
+           <h2 id="proceso">Proceso de instalación</h2>
+                              
+                <ol>
+                    <p id="liga">Liga para descargar directamente el programa:</p>
+                    <a href="https://nodejs.org/es/download/" target="_blank">Node JS</a>
+                    <br>
+                    <br>
+                    <li>Ejecutaremos el instalador que acabamos de descargar. Simplemente debemos avanzar en el proceso de instalación.</li>
+                    <br>
+                    <li>Una vez finalizado el proceso de instalación, podemos comprobar fácilmente si este se ha instalado correctamente. 
+                        Para ello, vamos al intérprete de comandos de nuestro ordenador (en Windows, escribir “cmd” en la barra de búsqueda y abrir la aplicación desde el “símbolo del sistema”.</li>
+                    <br>
+                    <li>En la ventana de comandos, escribir node -v y pulsar la tecla Enter. Nos debería aparecer la versión que tenemos instalada de Node.js. 
+                        Para comprobar que se ha instalado también NPM, escribiremos npm -v y pulsaremos de nuevo Enter. Nos debería aparecer también en este caso la versión del Node Package Manager.</li>
+                    <br>
+
+                    <a href="https://www.youtube.com/watch?v=ipmhBYqIP44" target="_blank">Video sobre el proceso de instalación</a>
+
+                </ol>
+            </article>
+            
+
+        </article>
+    </section>
+    <aside>   
+        <h1> Otras páginas acerca de Node Js</h1>
+        <p>Páginas importantes sobre Node Js</p>
+        <a href="https://nodejs.org/es/" target="_blank"> Página Oficial de Node JS</a>
+       <br>
+       <a href="https://www.youtube.com/watch?v=HVzFLw5r2EM" target="_blank">Como usar Node JS</a>
+        <br>
+        <a href="https://www.youtube.com/watch?v=BhvLIzVL8_o" target="_blank">Aprende Node JS</a>
+    </aside>
+
+    <footer>
+        <hr>Nombre del programador de la página</hr>
+        <p>Mariana Canchola Ramírez</p>
+    </footer>
+
+
+    
+
+
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desarrollo de aplicaciones web</title>
+</head>
+<body bgcolor="aliceblue">
+    <!--comentario: esta es la seccion del cuerpo del documento-->
+    <h1 style="color:rgba(0, 0, 0, 0.774); text-align: center;">Desarrollo de Aplicaciones Web</h1>
+    <h2>Mapa mental con conceptos de Desarrollo de Aplicaciones Web</h2>
+    <hr style="color:burlywood; font-family:Times New Roman">
+    <p>El mapa mental es un...
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. 
+        Accusantium natus mollitia voluptates sapiente repudiandae tenetur quam, repellendus, 
+        aspernatur ea saepe suscipit facere facilis totam praesentium consectetur. Dolores aperiam earum soluta?
+        Lorem ipsum dolor, sit amet consectetur adipisicing elit. Nulla ullam minus esse cupiditate nostrum? Id 
+        consequatur maxime ea. Asperiores fuga dolorem quidem numquam sequi dolorum rerum soluta at laboriosam 
+        magnam. Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci doloremque et, rerum assumenda
+        provident molestiae ad tempora voluptas labore iure ducimus est, recusandae id animi, hic quo. Sint, 
+        ratione minus?
+    </p>
+    <a href="PruebaHTML.html">Regresar al ejemplo anterior</a>
+    <a href="https://www.google.com/">Ir a google</a>
+    <br>
+    Materias
+    <ul>
+        <li>Desarrollo Web</li>
+        <ol>
+            <li>Front-end</li>
+            
+            <li>Back-end</li>
+        </ol>
+        <li>Integradora</li>
+        <li>Formación Sociocultural</li>
+        <li>Conmutación de redes</li>
+    </ul>
+    Fases de Desarrollo
+    <ol>
+        <li>Analizar</li>
+        <li>Diseñar</li>
+        <li>Codificar</li>
+        <li>Probar</li>
+    </ol>
+    
+    <img src="mapa.jpg" alt="Texto alternativo de mapa" width="650px" height="500px">
+</body>
+</html>

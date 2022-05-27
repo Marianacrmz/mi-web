@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 3</title>
+    <link rel="stylesheet" href="css/miestilo.css">
+</head>
+<body>
+    <header>
+        <h1>CSS 3</h1>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="vscode.html"> Aplicaciones Web </a></li>
+            <li>Front-end 
+                <ul>
+                    <li>  <a href="html.html">html 5</a></li>
+                    <li>  <a href="CSS.html">CSS 3</a></li>
+                    <li> <a href="JavaScript.html"> JavaScript</a></li>
+                </ul>
+            </li>
+    
+            <li>Black-end 
+                    <ul>
+                        <li> <a href="NodeJS.html"> Node JS</a></li>
+                        <li><a href="MySQL.html"> MySQL</a></li>
+                        <li><a href="MongoDB.html"> MongoDB</a></li>
+                        <li> <a href="Angular.html">Angular</a></li>
+                    </ul>
+            
+        </ul>
+    </nav>
+    
+    <section>
+        <article>
+            <img src="CS.png" alt="text alterno" width="300" height="160">
+            <h2> Temas de CSS:</h2>
+            <ul>
+                <li> <a href="#concepto">¿Qué es CCS? - Concepto</a></li>
+                <li> <a href="#caracteristicas">Caracteristicas de CSS</a></li>
+                <li> <a href="#proceso">Cómo visualizar CSS </a></li>
+                <li> <a href="#etiquetas">Principales propiedades</a></li>
+ 
+            </ul>
+        </article>
+
+        <article>
+            <h2 id="concepto">¿Qué es CSS? - Concepto</h2>
+            <p>Las hojas de estilo en cascada (CSS, cascading style sheets) permiten crear páginas web atractivas.
+               Pero ¿cómo funcionan realmente? En este artículo explicaremos qué es el CSS con un ejemplo 
+               de sintaxis sencillo y describiremos algunos términos clave sobre este lenguaje. </p>
+            <p>Empezar con CSS, vinculamos una hoja de estilo externa a nuestra página. Este es el método más común y útil para adjuntar 
+                CSS a un documento, porque puedes vincular el CSS a varias páginas y dar estilo a todas ellas con la misma hoja de estilo. En la mayoría de los casos, las diferentes páginas de un sitio web se verán más o menos iguales, 
+                de modo que puedes usar el mismo conjunto de reglas para el aspecto y la interacción básicos.</p>
+                
+                <a href="https://developer.mozilla.org/es/docs/Learn/CSS/First_steps/What_is_CSS" target="_blank">Página Oficial de CCS</a><br>
+                <br>
+        </article>
+        <article>
+            <h2 id="caracteristicas">Caracteristicas</h2>
+            <li>Complementariedad con documentos estructurados.</li>
+            <li>Independencia del vendedor, la plataforma y el dispositivo.</li>
+            <li>Mantenibilidad.</li>
+            <li>Simplicidad.</li>
+            <li>Combinación con lenguajes alternativos.</li>
+            <li>Accesibilidad.</li>
+        </article>
+
+            <article>
+                <h2 id="proceso">Proceso de instalación</h2>
+                <p>CSS es el software que he visto instalar muy amigable. La instalación es muy simple. La versión superior no necesita ser descifrada. Aquí hay dos métodos de instalación (CCS8.2.0, CCS5.5.0).</p>
+                <p>Los métodos de instalación para otras versiones son similares (No se recomienda usar CSS con una versión demasiado baja, porque la versión oficial es demasiado baja para proporcionar parches).</p>
+                
+                <ol>
+                    <li>Paso 1: Apague el firewall de la computadora
+                    </li>
+                    <br>
+                    <li>Paso 2:  Apague el software antivirus de la computadora (tenga en cuenta que las computadoras de algunas personas tienen varios software antivirus desactivados)
+                    </li>
+                    <br>
+                    <li>Paso 3: Recuerde no instalar el software CSS en la ruta china (de hecho, es el mismo para todo tipo de software, no los instale en la ruta china, de lo contrario pueden ocurrir problemas impredecibles)
+                    </li>
+                    <br>
+                    <a href="https://programmerclick.com/article/2388449613/" target="_blank">Ver más</a>
+                    <br>
+                    <a href="https://www.youtube.com/watch?v=Y3d4C-CLsoI" target="_blank">Video sobre el proceso de instalación</a>
+
+                </ol>
+            </article>
+
+            <article>
+                <h2 id="etiquetas">Principales propiedades de CSS</h2>
+                <h3>Font-family:</h3>
+                <p>Define la familia tipográfica. Es conveniente poner una lista de dos o tres tipografías separadas por coma, porque si el usuario no tiene instalada 
+                    la tipografía que nosostros elegimos, el navegador opta por mostrar la siguiente que debería ser una similar, si tampoco la tiene instalada, mostrará la tipografía por defecto.</p>
+                <h3>Font-size:</h3>
+                <p>Define el tamaño de la fuente y el valor se puede escribir en pixels o en ems. En este momento se recomienda usar ems. Los dos son valores relativos, el pixel es un valor relativo 
+                    a la resolución de la pantalla, pero el em es relativo al tamaño de la fuente definida por el usuario. Si el usuario no cambió la configuración, el valor por defecto de los textos en 
+                    todos los navegadores es de 16px. Entonces 1em = 16px.</p>
+                <h3>Color:</h3>
+                <p>Define el color de la tipografía. Los colores se pueden escribir de 3 formas distinas: con sistema hexadecimal, por ejemplo: #FF0000 (es rojo). Con los nombres de los colores (más limitado) por ejemplo: 
+                    black, red, green. O usando RGB, esta paleta permite agregar el canal alfa para hacer transparencias.</p>
+                <h3>Width: </h3>
+                <p>Define el ancho de un elemento, el valor se puede escribir en pixels, ems o porcentaje.</p>
+                <h3>Max-width o min-width: </h3>
+                <p>Definen el ancho máximo o mínimo de un elemento. Muy importante en sitios adaptables</p>
+                <h3>Height:</h3>
+                <p>Define el alto de un elemento, el valor se puede escribir en pixels, ems o porcentaje.</p>
+                <h3>Padding:</h3>
+                <p>Es la distancia desde el borde de un elemento hasta su contenido</p>
+                <h3>Margin:</h3>
+                <p>Es la distancia entre un elemento y otro (desde el borde de un elemento hacia afuera)</p>
+                <h3>Border:</h3>
+                <p>Define el borde de un elemento, su color, su estilo y grosor.</p>
+                <h3>Background: </h3>
+                <p>Define los fondos de un objeto. El fondo puede ser una imagen o un color. El color puede ser pleno o degradado. La imagen se puede repetir formando una trama (es lo que ocurre por defecto) o se puede especificar que no repita y que se coloque en determinada posición.</p>
+                </article>
+                
+    </section>
+    <aside>
+        <h2> Otras Páginas sobre CSS</h2>
+        <p>Páginas importantes sobre CSS</p>
+        <a href="https://developer.mozilla.org/es/docs/Web/CSS" target="_blank"> Página referente a CSS </a>
+       <br>
+       <a href="https://www.youtube.com/watch?v=W6GTDfrWjXs" target="_blank">¿Como usar CSS?</a>
+       <br>
+       <a href= "https://www.youtube.com/watch?v=24gNhTcy6pw" target="_blank">Aprende CSS desde 0</a>
+    </aside>
+
+    <footer>
+        <hr>Nombre del programador de la página</hr>
+        <p>Mariana Canchola Ramírez</p>
+    </footer>
+
+</body>
+</html>
