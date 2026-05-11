@@ -1,0 +1,353 @@
+name: Semgrep SAST - Análisis de Seguridad de Código
+
+# Workflow SAST
+# ----------------------------------------------------------------------------
+# Controles aplicados:
+#   - Menor privilegio (defensa en profundidad: org settings + workflow YAML)
+#   - Supply chain security (pin por SHA en todas las actions)
+#   - Evidencia auditable (artifacts + SARIF + step summary, retención 90 días)
+#   - Reproducibilidad (versiones fijas, runner pineado, sin telemetría)
+#   - Prevención de leakage de secretos (persist-credentials=false)
+#   - No modificación del repositorio (sin permisos de escritura sobre código)
+# ----------------------------------------------------------------------------
+# Frecuencia revisión: Trimestral
+# ============================================================================
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'release/**'
+
+  pull_request:
+    branches:
+      - main
+      - develop
+
+  schedule:
+    - cron: '0 9 * * 1'  # Lunes 09:00 UTC - auditoría continua
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+env:
+  SEMGREP_VERSION: "1.139.0"
+  SCAN_TIMEOUT_SECONDS: 300
+  EVIDENCE_RETENTION_DAYS: 90
+
+# ============================================================================
+# CONCURRENCY: NO cancelar ejecuciones previas.
+# Cada commit debe dejar evidencia auditable. Cancelar dejaría huecos
+# en el rastro de auditoría si hay varios push consecutivos.
+# ============================================================================
+concurrency:
+  group: semgrep-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+
+  semgrep-scan:
+    name: SAST Security Scan
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    outputs:
+      total_findings: ${{ steps.count.outputs.total }}
+      critical_findings: ${{ steps.count.outputs.critical }}
+      high_findings: ${{ steps.count.outputs.high }}
+      medium_findings: ${{ steps.count.outputs.medium }}
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Install Semgrep
+        run: |
+          set -euo pipefail
+          pip install --user "semgrep==${{ env.SEMGREP_VERSION }}"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Validate Semgrep configuration
+        run: |
+          set -euo pipefail
+
+          if [ ! -f "semgrep.yml" ]; then
+            echo "::error title=Missing Configuration::semgrep.yml no existe en el repositorio"
+            exit 1
+          fi
+
+      - name: Log scan metadata
+        run: |
+          set -euo pipefail
+
+          echo "============================================"
+          echo "  METADATA DEL ESCANEO SAST"
+          echo "============================================"
+          echo "Repositorio:    ${{ github.repository }}"
+          echo "Branch:         ${{ github.ref_name }}"
+          echo "Commit SHA:     ${{ github.sha }}"
+          echo "Trigger:        ${{ github.event_name }}"
+          echo "Run ID:         ${{ github.run_id }}"
+          echo "Run Number:     ${{ github.run_number }}"
+          echo "Run Attempt:    ${{ github.run_attempt }}"
+          echo "Actor:          ${{ github.actor }}"
+          echo "Workflow ref:   ${{ github.workflow_ref }}"
+          echo "Fecha UTC:      $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          echo "Semgrep:        $(semgrep --version)"
+          echo "============================================"
+
+      # ----------------------------------------------------------------------
+      # ESCANEO (JSON)
+      # Manejo de exit codes:
+      #   0   = sin hallazgos
+      #   1   = hallazgos encontrados (NO es error de ejecución)
+      #   >1  = error real (timeout, ruleset corrupto, OOM, etc.)
+      # ----------------------------------------------------------------------
+      - name: Run Semgrep SAST analysis (JSON)
+        id: semgrep
+        run: |
+          set +e
+          set -o pipefail
+
+          semgrep scan \
+            --config=p/security-audit \
+            --config=p/secrets \
+            --config=p/owasp-top-ten \
+            --config=p/cwe-top-25 \
+            --config=p/r2c-security-audit \
+            --config=semgrep.yml \
+            --json \
+            --output=semgrep-results.json \
+            --metrics=off \
+            --disable-version-check \
+            --timeout=${{ env.SCAN_TIMEOUT_SECONDS }} \
+            --exclude=node_modules \
+            --exclude=dist \
+            --exclude=build \
+            --exclude=vendor \
+            --exclude=.terraform \
+            --exclude=.git \
+            --exclude=.semgrep \
+            --no-git-ignore
+
+          EXIT_CODE=$?
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          echo "Semgrep exit code: $EXIT_CODE"
+
+          if [ "$EXIT_CODE" -gt 1 ]; then
+            echo "::error title=Semgrep Execution Error::Semgrep falló con exit code $EXIT_CODE (no relacionado con hallazgos)"
+            exit "$EXIT_CODE"
+          fi
+
+      # ----------------------------------------------------------------------
+      # Reporte SARIF
+      # ----------------------------------------------------------------------
+      - name: Generate SARIF report
+        if: always()
+        run: |
+          set +e
+
+          semgrep scan \
+            --config=p/security-audit \
+            --config=p/secrets \
+            --config=p/owasp-top-ten \
+            --config=p/cwe-top-25 \
+            --config=p/r2c-security-audit \
+            --config=semgrep.yml \
+            --sarif \
+            --output=semgrep.sarif \
+            --metrics=off \
+            --disable-version-check \
+            --timeout=${{ env.SCAN_TIMEOUT_SECONDS }} \
+            --exclude=node_modules \
+            --exclude=dist \
+            --exclude=build \
+            --exclude=vendor \
+            --exclude=.terraform \
+            --exclude=.git \
+            --exclude=.semgrep \
+            --no-git-ignore
+          exit 0
+
+      # ----------------------------------------------------------------------
+      # Conteo de hallazgos por severidad
+      # ----------------------------------------------------------------------
+      - name: Count findings by severity
+        id: count
+        if: always()
+        run: |
+          set -euo pipefail
+
+          if [ ! -f semgrep-results.json ]; then
+            echo "::warning::No se generó semgrep-results.json"
+            echo "total=0"    >> $GITHUB_OUTPUT
+            echo "critical=0" >> $GITHUB_OUTPUT
+            echo "high=0"     >> $GITHUB_OUTPUT
+            echo "medium=0"   >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          TOTAL=$(jq    '.results | length' semgrep-results.json)
+          CRITICAL=$(jq '[.results[] | select(.extra.severity=="ERROR")]   | length' semgrep-results.json)
+          HIGH=$(jq     '[.results[] | select(.extra.severity=="WARNING")] | length' semgrep-results.json)
+          MEDIUM=$(jq   '[.results[] | select(.extra.severity=="INFO")]    | length' semgrep-results.json)
+
+          echo "total=$TOTAL"       >> $GITHUB_OUTPUT
+          echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+          echo "high=$HIGH"         >> $GITHUB_OUTPUT
+          echo "medium=$MEDIUM"     >> $GITHUB_OUTPUT
+
+          echo "Resumen: Total=$TOTAL | Críticos=$CRITICAL | Altos=$HIGH | Medios=$MEDIUM"
+
+      # ----------------------------------------------------------------------
+      # Reporte en GitHub Step Summary
+      # ----------------------------------------------------------------------
+      - name: Generate executive summary
+        if: always()
+        run: |
+          set -euo pipefail
+
+          TOTAL=${{ steps.count.outputs.total }}
+          CRITICAL=${{ steps.count.outputs.critical }}
+          HIGH=${{ steps.count.outputs.high }}
+          MEDIUM=${{ steps.count.outputs.medium }}
+
+          {
+            echo "# Reporte de Seguridad SAST - Semgrep"
+            echo ""
+            echo "## Información del Escaneo"
+            echo ""
+            echo "| Campo | Valor |"
+            echo "|-------|-------|"
+            echo "| **Repositorio** | \`${{ github.repository }}\` |"
+            echo "| **Branch** | \`${{ github.ref_name }}\` |"
+            echo "| **Commit SHA** | \`${{ github.sha }}\` |"
+            echo "| **Run ID** | \`${{ github.run_id }}\` |"
+            echo "| **Run Attempt** | \`${{ github.run_attempt }}\` |"
+            echo "| **Trigger** | ${{ github.event_name }} |"
+            echo "| **Actor** | \`${{ github.actor }}\` |"
+            echo "| **Fecha UTC** | $(date -u +'%Y-%m-%dT%H:%M:%SZ') |"
+            echo "| **Semgrep** | \`${{ env.SEMGREP_VERSION }}\` |"
+            echo ""
+            echo "## Resumen Ejecutivo"
+            echo ""
+            echo "| Severidad | Cantidad | SLA Remediación |"
+            echo "|-----------|----------|-----------------|"
+            echo "| **Crítico** | $CRITICAL | 7 días |"
+            echo "| **Alto** | $HIGH | 15 días |"
+            echo "| **Medio** | $MEDIUM | 30 días |"
+            echo "| **TOTAL** | **$TOTAL** | — |"
+            echo ""
+          } >> $GITHUB_STEP_SUMMARY
+
+          if [ "$TOTAL" -gt 0 ] && [ -f semgrep-results.json ]; then
+            {
+              echo "## Hallazgos por archivo"
+              echo ""
+              echo "| Archivo | Hallazgos |"
+              echo "|---------|-----------|"
+            } >> $GITHUB_STEP_SUMMARY
+
+            jq -r '.results | group_by(.path) | .[] | "| `\(.[0].path)` | \(length) |"' \
+              semgrep-results.json >> $GITHUB_STEP_SUMMARY
+
+            {
+              echo ""
+              echo "## Detalle de hallazgos"
+              echo ""
+            } >> $GITHUB_STEP_SUMMARY
+
+            jq -r '.results[] |
+              "### `\(.path)` (línea \(.start.line))\n\n" +
+              "- **Regla:** `\(.check_id)`\n" +
+              "- **Severidad:** \(.extra.severity)\n" +
+              "- **CWE:** \(.extra.metadata.cwe // "N/A")\n" +
+              "- **OWASP:** \(.extra.metadata.owasp // "N/A")\n" +
+              "- **Mensaje:** \(.extra.message)\n\n" +
+              "```\n\(.extra.lines)\n```\n\n---\n"' \
+              semgrep-results.json >> $GITHUB_STEP_SUMMARY
+          else
+            {
+              echo "## Resultado"
+              echo ""
+              echo "No se encontraron vulnerabilidades. El código pasó todos los controles SAST."
+            } >> $GITHUB_STEP_SUMMARY
+          fi
+
+          {
+            echo ""
+            echo "---"
+            echo ""
+            echo "**Retención de evidencia:** ${{ env.EVIDENCE_RETENTION_DAYS }} días"
+            echo ""
+            echo "*Reporte generado automáticamente. Para descargar el JSON/SARIF completo, ver sección Artifacts de este run.*"
+          } >> $GITHUB_STEP_SUMMARY
+
+      # ----------------------------------------------------------------------
+      # Artifacts con retención de 90 días
+      # ----------------------------------------------------------------------
+      - name: Upload audit evidence
+        if: always()
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+        with:
+          name: semgrep-audit-evidence-${{ github.run_id }}
+          path: |
+            semgrep-results.json
+            semgrep.sarif
+          retention-days: ${{ env.EVIDENCE_RETENTION_DAYS }}
+          if-no-files-found: warn
+
+      # ----------------------------------------------------------------------
+      # Upload SARIF a GitHub Code Scanning
+      # ----------------------------------------------------------------------
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always() && hashFiles('semgrep.sarif') != ''
+        uses: github/codeql-action/upload-sarif@4f3212b61783c3c68e8309a0f18a699764811cda
+        continue-on-error: true
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+      # ----------------------------------------------------------------------
+      # Aplicación de política: bloqueo automático ante críticos
+      # ----------------------------------------------------------------------
+      - name: Enforce security policy
+        if: always()
+        run: |
+          set -euo pipefail
+
+          CRITICAL=${{ steps.count.outputs.critical }}
+          HIGH=${{ steps.count.outputs.high }}
+          TOTAL=${{ steps.count.outputs.total }}
+
+          echo "============================================"
+          echo "  VALIDACIÓN DE POLÍTICA DE SEGURIDAD"
+          echo "============================================"
+          echo "Política: Cero tolerancia a vulnerabilidades CRÍTICAS"
+          echo "Política: Hallazgos ALTOS requieren revisión documentada"
+          echo "============================================"
+
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "POLÍTICA VIOLADA: $CRITICAL hallazgos CRÍTICOS detectados"
+            echo "::error title=Security Policy Violation::Se detectaron $CRITICAL vulnerabilidades críticas."
+            exit 1
+          fi
+
+          if [ "$HIGH" -gt 0 ]; then
+            echo "ADVERTENCIA: $HIGH hallazgos de severidad ALTA"
+            echo "::warning title=High Severity Findings::$HIGH vulnerabilidades altas requieren revisión en SLA de 15 días."
+          fi
+
+          if [ "$TOTAL" -eq 0 ]; then
+            echo "ÉXITO: No se encontraron vulnerabilidades"
+          else
+            echo "Total de hallazgos: $TOTAL (sin críticos)"
+          fi
