@@ -1,0 +1,67 @@
+# semgrep-rules.yml - Reglas custom y excepciones de la organización
+# ----------------------------------------------------------------------------
+# Este archivo se ejecuta en conjunto con los rulesets remotos definidos en
+# el workflow .github/workflows/semgrep.yml:
+#   - p/security-audit
+#   - p/secrets
+#   - p/owasp-top-ten
+#   - p/cwe-top-25
+#   - p/r2c-security-audit
+
+# Propósito:
+#   - Codificar reglas específicas del negocio o stack tecnológico.
+#   - Documentar excepciones formales a reglas remotas (con justificación).
+#   - Servir como punto único de personalización del SAST organizacional.
+#
+# Frecuencia revisión:Trimestral (junto con el workflow)
+# Última revisión:    2026-05-10
+
+rules: []
+
+# ----------------------------------------------------------------------------
+# GUÍA PARA AGREGAR REGLAS CUSTOM
+# Cuando el equipo identifique un patrón de riesgo recurrente, agregar la
+# regla aquí siguiendo este formato:
+#
+# rules:
+#   - id: nombre-corto-descriptivo-de-la-regla
+#     pattern: <expresión a detectar>
+#     message: |
+#       Descripción clara del problema y cómo remediarlo.
+#       Referencia a documentación interna si aplica.
+#     languages:
+#       - python
+#       - javascript
+#       - go
+#     severity: ERROR   # ERROR (crítico) | WARNING (alto) | INFO (medio)
+#     metadata:
+#       cwe: "CWE-XXX"
+#       owasp: "AXX:2021"
+#       category: security
+#       references:
+#         - https://enlace-a-documentacion-interna
+#
+# ----------------------------------------------------------------------------
+# REGISTRO DE EXCEPCIONES FORMALES
+# Cuando se necesite suprimir una regla remota por falso positivo recurrente,
+# documentar aquí con justificación. NO usar comentarios "# nosemgrep" sin
+# trazabilidad — viola el principio de auditabilidad.
+#
+# Ejemplo de exclusión documentada:
+#
+# rules:
+#   - id: override-falso-positivo-jwt
+#     # Excepción aprobada por: <nombre>
+#     # Ticket de referencia:   <ID>
+#     # Fecha de aprobación:    YYYY-MM-DD
+#     # Vigencia:               revisar en próxima auditoría trimestral
+#     # Justificación:
+#     #   La regla p/security-audit.jwt-hardcoded marca como hallazgo
+#     #   nuestro JWT de prueba en tests/fixtures/, que no es un secreto real.
+#     pattern: "test_jwt_fixture_VALOR_DE_PRUEBA"
+#     message: "JWT de prueba documentado. No aplica."
+#     languages: [python]
+#     severity: INFO
+#     paths:
+#       include:
+#         - "tests/fixtures/**"
