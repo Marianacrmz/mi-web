@@ -1,16 +1,7 @@
 name: Semgrep SAST - Análisis de Seguridad de Código
 
+# ============================================================================
 # Workflow SAST
-# ----------------------------------------------------------------------------
-# Controles aplicados:
-#   - Menor privilegio (defensa en profundidad: org settings + workflow YAML)
-#   - Supply chain security (pin por SHA en todas las actions)
-#   - Evidencia auditable (artifacts + SARIF + step summary, retención 90 días)
-#   - Reproducibilidad (versiones fijas, runner pineado, sin telemetría)
-#   - Prevención de leakage de secretos (persist-credentials=false)
-#   - No modificación del repositorio (sin permisos de escritura sobre código)
-# ----------------------------------------------------------------------------
-# Frecuencia revisión: Trimestral
 # ============================================================================
 
 on:
@@ -41,8 +32,7 @@ env:
 
 # ============================================================================
 # CONCURRENCY: NO cancelar ejecuciones previas.
-# Cada commit debe dejar evidencia auditable. Cancelar dejaría huecos
-# en el rastro de auditoría si hay varios push consecutivos.
+# Cada commit debe dejar evidencia auditable.
 # ============================================================================
 concurrency:
   group: semgrep-${{ github.ref }}
@@ -62,7 +52,6 @@ jobs:
       medium_findings: ${{ steps.count.outputs.medium }}
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -70,10 +59,12 @@ jobs:
           persist-credentials: false
 
       - name: Install Semgrep
+        env:
+          SEMGREP_VERSION_ENV: ${{ env.SEMGREP_VERSION }}
         run: |
           set -euo pipefail
-          pip install --user "semgrep==${{ env.SEMGREP_VERSION }}"
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          pip install --user "semgrep==${SEMGREP_VERSION_ENV}"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Validate Semgrep configuration
         run: |
@@ -85,27 +76,37 @@ jobs:
           fi
 
       - name: Log scan metadata
+        env:
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+          TRIGGER: ${{ github.event_name }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          ACTOR: ${{ github.actor }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
         run: |
           set -euo pipefail
 
           echo "============================================"
           echo "  METADATA DEL ESCANEO SAST"
           echo "============================================"
-          echo "Repositorio:    ${{ github.repository }}"
-          echo "Branch:         ${{ github.ref_name }}"
-          echo "Commit SHA:     ${{ github.sha }}"
-          echo "Trigger:        ${{ github.event_name }}"
-          echo "Run ID:         ${{ github.run_id }}"
-          echo "Run Number:     ${{ github.run_number }}"
-          echo "Run Attempt:    ${{ github.run_attempt }}"
-          echo "Actor:          ${{ github.actor }}"
-          echo "Workflow ref:   ${{ github.workflow_ref }}"
+          echo "Repositorio:    ${REPO}"
+          echo "Branch:         ${BRANCH}"
+          echo "Commit SHA:     ${COMMIT_SHA}"
+          echo "Trigger:        ${TRIGGER}"
+          echo "Run ID:         ${RUN_ID}"
+          echo "Run Number:     ${RUN_NUMBER}"
+          echo "Run Attempt:    ${RUN_ATTEMPT}"
+          echo "Actor:          ${ACTOR}"
+          echo "Workflow ref:   ${WORKFLOW_REF}"
           echo "Fecha UTC:      $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           echo "Semgrep:        $(semgrep --version)"
           echo "============================================"
 
       # ----------------------------------------------------------------------
-      # ESCANEO (JSON)
+      # Escaneo principal (JSON)
       # Manejo de exit codes:
       #   0   = sin hallazgos
       #   1   = hallazgos encontrados (NO es error de ejecución)
@@ -113,6 +114,8 @@ jobs:
       # ----------------------------------------------------------------------
       - name: Run Semgrep SAST analysis (JSON)
         id: semgrep
+        env:
+          SCAN_TIMEOUT: ${{ env.SCAN_TIMEOUT_SECONDS }}
         run: |
           set +e
           set -o pipefail
@@ -128,7 +131,7 @@ jobs:
             --output=semgrep-results.json \
             --metrics=off \
             --disable-version-check \
-            --timeout=${{ env.SCAN_TIMEOUT_SECONDS }} \
+            --timeout="${SCAN_TIMEOUT}" \
             --exclude=node_modules \
             --exclude=dist \
             --exclude=build \
@@ -139,7 +142,7 @@ jobs:
             --no-git-ignore
 
           EXIT_CODE=$?
-          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
           echo "Semgrep exit code: $EXIT_CODE"
 
           if [ "$EXIT_CODE" -gt 1 ]; then
@@ -152,6 +155,8 @@ jobs:
       # ----------------------------------------------------------------------
       - name: Generate SARIF report
         if: always()
+        env:
+          SCAN_TIMEOUT: ${{ env.SCAN_TIMEOUT_SECONDS }}
         run: |
           set +e
 
@@ -166,7 +171,7 @@ jobs:
             --output=semgrep.sarif \
             --metrics=off \
             --disable-version-check \
-            --timeout=${{ env.SCAN_TIMEOUT_SECONDS }} \
+            --timeout="${SCAN_TIMEOUT}" \
             --exclude=node_modules \
             --exclude=dist \
             --exclude=build \
@@ -175,10 +180,12 @@ jobs:
             --exclude=.git \
             --exclude=.semgrep \
             --no-git-ignore
+
+          # No bloquear el workflow si la generación de SARIF falla.
           exit 0
 
       # ----------------------------------------------------------------------
-      # Conteo de hallazgos por severidad
+      # Conteo de hallazgos por severidad (desde JSON)
       # ----------------------------------------------------------------------
       - name: Count findings by severity
         id: count
@@ -188,10 +195,10 @@ jobs:
 
           if [ ! -f semgrep-results.json ]; then
             echo "::warning::No se generó semgrep-results.json"
-            echo "total=0"    >> $GITHUB_OUTPUT
-            echo "critical=0" >> $GITHUB_OUTPUT
-            echo "high=0"     >> $GITHUB_OUTPUT
-            echo "medium=0"   >> $GITHUB_OUTPUT
+            echo "total=0"    >> "$GITHUB_OUTPUT"
+            echo "critical=0" >> "$GITHUB_OUTPUT"
+            echo "high=0"     >> "$GITHUB_OUTPUT"
+            echo "medium=0"   >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -200,25 +207,34 @@ jobs:
           HIGH=$(jq     '[.results[] | select(.extra.severity=="WARNING")] | length' semgrep-results.json)
           MEDIUM=$(jq   '[.results[] | select(.extra.severity=="INFO")]    | length' semgrep-results.json)
 
-          echo "total=$TOTAL"       >> $GITHUB_OUTPUT
-          echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
-          echo "high=$HIGH"         >> $GITHUB_OUTPUT
-          echo "medium=$MEDIUM"     >> $GITHUB_OUTPUT
+          echo "total=$TOTAL"       >> "$GITHUB_OUTPUT"
+          echo "critical=$CRITICAL" >> "$GITHUB_OUTPUT"
+          echo "high=$HIGH"         >> "$GITHUB_OUTPUT"
+          echo "medium=$MEDIUM"     >> "$GITHUB_OUTPUT"
 
           echo "Resumen: Total=$TOTAL | Críticos=$CRITICAL | Altos=$HIGH | Medios=$MEDIUM"
 
       # ----------------------------------------------------------------------
-      # Reporte en GitHub Step Summary
+      # Reporte ejecutivo en GitHub Step Summary
       # ----------------------------------------------------------------------
       - name: Generate executive summary
         if: always()
+        env:
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          TRIGGER: ${{ github.event_name }}
+          ACTOR: ${{ github.actor }}
+          SEMGREP_VER: ${{ env.SEMGREP_VERSION }}
+          RETENTION_DAYS: ${{ env.EVIDENCE_RETENTION_DAYS }}
+          TOTAL: ${{ steps.count.outputs.total }}
+          CRITICAL: ${{ steps.count.outputs.critical }}
+          HIGH: ${{ steps.count.outputs.high }}
+          MEDIUM: ${{ steps.count.outputs.medium }}
         run: |
           set -euo pipefail
-
-          TOTAL=${{ steps.count.outputs.total }}
-          CRITICAL=${{ steps.count.outputs.critical }}
-          HIGH=${{ steps.count.outputs.high }}
-          MEDIUM=${{ steps.count.outputs.medium }}
 
           {
             echo "# Reporte de Seguridad SAST - Semgrep"
@@ -227,43 +243,43 @@ jobs:
             echo ""
             echo "| Campo | Valor |"
             echo "|-------|-------|"
-            echo "| **Repositorio** | \`${{ github.repository }}\` |"
-            echo "| **Branch** | \`${{ github.ref_name }}\` |"
-            echo "| **Commit SHA** | \`${{ github.sha }}\` |"
-            echo "| **Run ID** | \`${{ github.run_id }}\` |"
-            echo "| **Run Attempt** | \`${{ github.run_attempt }}\` |"
-            echo "| **Trigger** | ${{ github.event_name }} |"
-            echo "| **Actor** | \`${{ github.actor }}\` |"
+            echo "| **Repositorio** | \`${REPO}\` |"
+            echo "| **Branch** | \`${BRANCH}\` |"
+            echo "| **Commit SHA** | \`${COMMIT_SHA}\` |"
+            echo "| **Run ID** | \`${RUN_ID}\` |"
+            echo "| **Run Attempt** | \`${RUN_ATTEMPT}\` |"
+            echo "| **Trigger** | ${TRIGGER} |"
+            echo "| **Actor** | \`${ACTOR}\` |"
             echo "| **Fecha UTC** | $(date -u +'%Y-%m-%dT%H:%M:%SZ') |"
-            echo "| **Semgrep** | \`${{ env.SEMGREP_VERSION }}\` |"
+            echo "| **Semgrep** | \`${SEMGREP_VER}\` |"
             echo ""
             echo "## Resumen Ejecutivo"
             echo ""
             echo "| Severidad | Cantidad | SLA Remediación |"
             echo "|-----------|----------|-----------------|"
-            echo "| **Crítico** | $CRITICAL | 7 días |"
-            echo "| **Alto** | $HIGH | 15 días |"
-            echo "| **Medio** | $MEDIUM | 30 días |"
-            echo "| **TOTAL** | **$TOTAL** | — |"
+            echo "| **Crítico** | ${CRITICAL} | 7 días |"
+            echo "| **Alto** | ${HIGH} | 15 días |"
+            echo "| **Medio** | ${MEDIUM} | 30 días |"
+            echo "| **TOTAL** | **${TOTAL}** | — |"
             echo ""
-          } >> $GITHUB_STEP_SUMMARY
+          } >> "$GITHUB_STEP_SUMMARY"
 
-          if [ "$TOTAL" -gt 0 ] && [ -f semgrep-results.json ]; then
+          if [ "${TOTAL}" -gt 0 ] && [ -f semgrep-results.json ]; then
             {
               echo "## Hallazgos por archivo"
               echo ""
               echo "| Archivo | Hallazgos |"
               echo "|---------|-----------|"
-            } >> $GITHUB_STEP_SUMMARY
+            } >> "$GITHUB_STEP_SUMMARY"
 
             jq -r '.results | group_by(.path) | .[] | "| `\(.[0].path)` | \(length) |"' \
-              semgrep-results.json >> $GITHUB_STEP_SUMMARY
+              semgrep-results.json >> "$GITHUB_STEP_SUMMARY"
 
             {
               echo ""
               echo "## Detalle de hallazgos"
               echo ""
-            } >> $GITHUB_STEP_SUMMARY
+            } >> "$GITHUB_STEP_SUMMARY"
 
             jq -r '.results[] |
               "### `\(.path)` (línea \(.start.line))\n\n" +
@@ -273,23 +289,23 @@ jobs:
               "- **OWASP:** \(.extra.metadata.owasp // "N/A")\n" +
               "- **Mensaje:** \(.extra.message)\n\n" +
               "```\n\(.extra.lines)\n```\n\n---\n"' \
-              semgrep-results.json >> $GITHUB_STEP_SUMMARY
+              semgrep-results.json >> "$GITHUB_STEP_SUMMARY"
           else
             {
               echo "## Resultado"
               echo ""
               echo "No se encontraron vulnerabilidades. El código pasó todos los controles SAST."
-            } >> $GITHUB_STEP_SUMMARY
+            } >> "$GITHUB_STEP_SUMMARY"
           fi
 
           {
             echo ""
             echo "---"
             echo ""
-            echo "**Retención de evidencia:** ${{ env.EVIDENCE_RETENTION_DAYS }} días"
+            echo "**Retención de evidencia:** ${RETENTION_DAYS} días"
             echo ""
-            echo "*Reporte generado automáticamente. Para descargar el JSON/SARIF completo, ver sección Artifacts de este run.*"
-          } >> $GITHUB_STEP_SUMMARY
+            echo "*Reporte generado automáticamente.*"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       # ----------------------------------------------------------------------
       # Artifacts con retención de 90 días
@@ -306,7 +322,7 @@ jobs:
           if-no-files-found: warn
 
       # ----------------------------------------------------------------------
-      # Upload SARIF a GitHub Code Scanning
+      # Upload SARIF a GitHub Code Scanning 
       # ----------------------------------------------------------------------
       - name: Upload SARIF to GitHub Code Scanning
         if: always() && hashFiles('semgrep.sarif') != ''
@@ -321,33 +337,29 @@ jobs:
       # ----------------------------------------------------------------------
       - name: Enforce security policy
         if: always()
+        env:
+          CRITICAL: ${{ steps.count.outputs.critical }}
+          HIGH: ${{ steps.count.outputs.high }}
+          TOTAL: ${{ steps.count.outputs.total }}
         run: |
           set -euo pipefail
-
-          CRITICAL=${{ steps.count.outputs.critical }}
-          HIGH=${{ steps.count.outputs.high }}
-          TOTAL=${{ steps.count.outputs.total }}
 
           echo "============================================"
           echo "  VALIDACIÓN DE POLÍTICA DE SEGURIDAD"
           echo "============================================"
-          echo "Política: Cero tolerancia a vulnerabilidades CRÍTICAS"
-          echo "Política: Hallazgos ALTOS requieren revisión documentada"
-          echo "============================================"
-
-          if [ "$CRITICAL" -gt 0 ]; then
-            echo "POLÍTICA VIOLADA: $CRITICAL hallazgos CRÍTICOS detectados"
-            echo "::error title=Security Policy Violation::Se detectaron $CRITICAL vulnerabilidades críticas."
+          if [ "${CRITICAL}" -gt 0 ]; then
+            echo "POLÍTICA VIOLADA: ${CRITICAL} hallazgos CRÍTICOS detectados"
+            echo "::error title=Security Policy Violation::Se detectaron ${CRITICAL} vulnerabilidades críticas."
             exit 1
           fi
 
-          if [ "$HIGH" -gt 0 ]; then
-            echo "ADVERTENCIA: $HIGH hallazgos de severidad ALTA"
-            echo "::warning title=High Severity Findings::$HIGH vulnerabilidades altas requieren revisión en SLA de 15 días."
+          if [ "${HIGH}" -gt 0 ]; then
+            echo "ADVERTENCIA: ${HIGH} hallazgos de severidad ALTA"
+            echo "::warning title=High Severity Findings::${HIGH} vulnerabilidades altas requieren revisión en SLA de 15 días."
           fi
 
-          if [ "$TOTAL" -eq 0 ]; then
+          if [ "${TOTAL}" -eq 0 ]; then
             echo "ÉXITO: No se encontraron vulnerabilidades"
           else
-            echo "Total de hallazgos: $TOTAL (sin críticos)"
+            echo "Total de hallazgos: ${TOTAL} (sin críticos)"
           fi
